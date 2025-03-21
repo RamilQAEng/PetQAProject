@@ -1,0 +1,16 @@
+# Виртуальное окружение
+venv/
+
+# Файлы Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py.class
+
+# Файлы IDE
+.vscode/
+.idea/
+
+# Файлы Docker
+.env
