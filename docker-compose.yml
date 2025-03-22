@@ -32,19 +32,20 @@ services:
     image: bitnami/kafka:3.5
     depends_on:
       zookeeper:
-        condition: service_healthy
+        condition: service_started
     ports:
       - "9092:9092"
     environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
       ALLOW_PLAINTEXT_LISTENER: "yes"
       KAFKA_HEAP_OPTS: "-Xmx1024M -Xms1024M"
-    healthcheck:
-      test: ["CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:9092"]
-      interval: 60s
-      timeout: 30s
-      retries: 15
-      start_period: 180s
+    # healthcheck:
+    #   test: ["CMD", "nc", "-z", "localhost", "9092"]
+    #   interval: 60s
+    #   timeout: 30s
+    #   retries: 15
+    #   start_period: 90s
 
   django:
     build:
@@ -85,7 +86,7 @@ services:
       - ./kafka_consumer:/app/kafka_consumer
     depends_on:
       kafka:
-        condition: service_healthy
+        condition: service_started
 
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.6.1
@@ -98,7 +99,7 @@ services:
       KAFKA_CLUSTERS_0_POLLING_TIMEOUT: "10000"
     depends_on:
       kafka:
-        condition: service_healthy
+        condition: service_started
       zookeeper:
         condition: service_healthy
 
