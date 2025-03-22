@@ -1,4 +1,4 @@
-from kafka import KafkaProducer
+from confluent_kafka import Producer
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -10,7 +10,10 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_kafka_producer():
-    return KafkaProducer(bootstrap_servers='kafka:9092')
+    return Producer({
+        'bootstrap.servers': 'kafka:9092',
+        'message.max.bytes': 1000000
+    })
 
 def get_db():
     db = SessionLocal()

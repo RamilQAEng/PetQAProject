@@ -1,17 +1,35 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ..dependencies import get_db
+from ..dependencies import get_db, get_kafka_producer
 from ..models import Task as TaskModel
 from ..schemas import TaskCreate, Task
+from ..models import Task as TaskModel
+from confluent_kafka import Producer
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 @router.post("/", response_model=Task)
-def create_task(task: TaskCreate, db: Session = Depends(get_db)):
+def create_task(
+    task: TaskCreate, 
+    db: Session = Depends(get_db),
+    producer: Producer = Depends(get_kafka_producer)
+):
     db_task = TaskModel(title=task.title, description=task.description)
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
+    
+    # Отправка сообщения в Kafka с обработкой ошибок
+    try:
+        producer.produce(
+            'tasks', 
+            key=str(db_task.id),
+            value=Task.from_orm(db_task).json().encode('utf-8')
+        )
+        producer.flush()
+    except Exception as e:
+        print(f"Kafka error: {str(e)}")
+    
     return db_task
 
 @router.get("/", response_model=list[Task])
